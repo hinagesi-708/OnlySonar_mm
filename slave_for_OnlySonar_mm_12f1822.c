@@ -14,8 +14,8 @@
  *                                          *
  *  use_port                                *
  *                __________                *
- *          Vdd---|1  ●   8|---Vss         *
- * (RA5)mmSonar---|2       7|---(RA0)       *
+ *          Vdd---|1  ?   8|---Vss         *
+ *        (RA5)---|2       7|---mmSonar(RA0)*
  *      (RA4)×---|3       6|---SCL(RA1)    *
  *      (RA3)×---|4       5|---SDA(RA2)    *
  *                ==========                *
@@ -59,7 +59,7 @@ int main(void) {
             
         send_data[0] = i2c_ans % 0x100;     //dat1 = (char)data;
         send_data[1] = i2c_ans / 0x100;     //dat2 = (char)data >> 8;
-//      data = dat2 * 0x100 + dat1; 読み出しの際
+//      data = dat2 * 0x100 + dat1; ??????
         __delay_ms(50);
     }
     return (0);
@@ -77,9 +77,9 @@ void init() {
 
 int Pls_mm(){
     long time_mm = 0;
-    while(RA5 == 1);
-    while(RA5 == 0);
-    while(RA5 == 1){
+    while(RA0 == 1);
+    while(RA0 == 0);
+    while(RA0 == 1){
         __delay_us(1);
         time_mm ++;
 //        if(time_mm > 5000) break;
