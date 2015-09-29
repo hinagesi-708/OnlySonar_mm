@@ -1,7 +1,7 @@
 #define SDA(x)		x ## A2
 #define SCL(x)		x ## A1
 
-#define I2C_ADDR_DEV1    13
+#define I2C_ADDR_DEV1    0x51
 
 signed char reseaved_data[8] = {0};
 unsigned char send_data[8] = {0};
