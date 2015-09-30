@@ -11,7 +11,7 @@
  *                                          *
  *  use_port                                *
  *                __________                *
- *          Vdd---|1  ●   8|---Vss         *
+ *          Vdd---|1  ?   8|---Vss         *
  *        (RA5)---|2       7|---mmSonar(RA0)*
  *      (RA4)×---|3       6|---SCL(RA1)    *
  *      (RA3)×---|4       5|---SDA(RA2)    *
@@ -66,7 +66,8 @@ int main(void) {
             }else{
                 count_time += TMR1;
             }
-            count_time = count_time - 38;
+            
+            if(count_time > 6000) count_time = 0;
             send_data[0] = count_time % 0x100;
             send_data[1] = count_time / 0x100;
 //            send_data[2] = count_time / 0x10000;
