@@ -1,12 +1,9 @@
-
 /* 
- * File:   slave_for_OnlySonar_mm_12f1822.c
+ * File:   slave_for_OnlySonar_mm_rev_12f1822.c
  * Author: kayoko
  *
- * Created on 2015/09/21, 13:32
+ * Created on 2015/09/30, 14:51
  */
-//  http://www.geocities.jp/zattouka/GarageHouse/micon/MPLAB/16F1827/USS/USS.htm
-
 /********************************************
  *  compiler    MPLAB XC8(v1.34)            *
  *  PIC         PIC12F1822                  *
@@ -14,12 +11,13 @@
  *                                          *
  *  use_port                                *
  *                __________                *
- *          Vdd---|1  ?   8|---Vss         *
+ *          Vdd---|1  ●   8|---Vss         *
  *        (RA5)---|2       7|---mmSonar(RA0)*
  *      (RA4)×---|3       6|---SCL(RA1)    *
  *      (RA3)×---|4       5|---SDA(RA2)    *
  *                ==========                *
  ********************************************/
+
 #include <xc.h>
 #include "I2C_slave.h"
 
@@ -29,64 +27,71 @@
 #pragma config CP       = OFF
 #pragma config BOREN    = ON
 #pragma config FCMEN    = OFF
-#pragma config MCLRE    = ON
+#pragma config MCLRE    = OFF
 #pragma config CPD      = OFF
 #pragma config IESO     = OFF
 #pragma config FOSC     = INTOSC
 
-#pragma config LVP      = ON
+#pragma config LVP      = OFF
 
 #define _XTAL_FREQ 16000000
 
-
 void init();
+unsigned long count_time = 0;
+
+static void interrupt ForInterrupt(){
+#include "I2C_slave_int.h"
+}
+
 
 int main(void) {
     init();
     I2C_init();
-    
-    int mm;
-    int i2c_ans;
 
     while (1) {
-        mm = 0;
-        i2c_ans = 0;
-        mm = Pls_mm();
-        mm = (mm + 0.18621)/0.251626;
-        mm = (mm - 18.33333)/0.980642;
-        mm = (mm - 5.4)/1.002109;
-        i2c_ans = mm;
-            
-        send_data[0] = i2c_ans % 0x100;     //dat1 = (char)data;
-        send_data[1] = i2c_ans / 0x100;     //dat2 = (char)data >> 8;
-//      data = dat2 * 0x100 + dat1; ??????
-        __delay_ms(50);
+        if(RA0 == 1){
+            TMR1L = 0;
+            TMR1H = 0;
+            TMR1IF = 0;
+            count_time = 0;
+            while(RA0 == 1){
+                if(TMR1IF){
+                    count_time += 65536;
+                    TMR1IF = 0;
+                }
+                if(count_time > 1000000) break;
+            }
+            if(TMR1IF){
+                count_time += TMR1 + 65536;
+            }else{
+                count_time += TMR1;
+            }
+            count_time = count_time - 38;
+            send_data[0] = count_time % 0x100;
+            send_data[1] = count_time / 0x100;
+//            send_data[2] = count_time / 0x10000;
+//            send_data[3] = count_time / 0x1000000;
+        }
     }
+
     return (0);
 }
 
 void init() {
-    OSCCONbits.IRCF = 0b1111;       //Set oscillator 16MHz
+    OSCCONbits.IRCF = 0b1101;       //Set oscillator 4MHz
     ANSELA  = 0x00;                 //Set RA pins digital
-    TRISA0 = 1;
-    TRISA5 = 1;
+    TRISA = 0xFF;
+    OPTION_REGbits.nWPUEN = 0;
+    WPUA = 0xFF;
 
-    PORTA = 0x00;                   //Set PORTA Low
+    T1CONbits.T1CKPS = 0x00;
+    T1CONbits.T1OSCEN = 0;
+    T1CONbits.nT1SYNC = 0;
+    T1CONbits.TMR1CS = 0;
+    TMR1L = 0x00;
+    TMR1H = 0x00;
+
+    T1CONbits.TMR1ON = 1;
+
     return;
-}
-
-int Pls_mm(){
-    long time_mm = 0;
-    while(RA0 == 1);
-    while(RA0 == 0);
-    while(RA0 == 1){
-        __delay_us(1);
-        time_mm ++;
-//        if(time_mm > 5000) break;
-    }
-    return time_mm;
-}
-
-static void interrupt forinterrupt(){
-    #include "I2C_slave_int.h"
 }
