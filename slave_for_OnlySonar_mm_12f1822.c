@@ -67,7 +67,8 @@ int main(void) {
                 count_time += TMR1;
             }
             
-            if(count_time > 6000) count_time = 0;
+            if(count_time > 6000) count_time = 6000;
+            if(count_time < 0) count_time = 0;
             send_data[0] = count_time % 0x100;
             send_data[1] = count_time / 0x100;
 //            send_data[2] = count_time / 0x10000;
