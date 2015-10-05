@@ -47,33 +47,43 @@ static void interrupt ForInterrupt(){
 int main(void) {
     init();
     I2C_init();
-
+    int i = 0;
+    unsigned short average[5] = {0};
+    unsigned short average_ans = 0;
     while (1) {
-        if(RA0 == 1){
-            TMR1L = 0;
-            TMR1H = 0;
-            TMR1IF = 0;
-            count_time = 0;
-            while(RA0 == 1){
-                if(TMR1IF){
-                    count_time += 65536;
-                    TMR1IF = 0;
+        for( i = 0; i < 5; i++){
+            if(RA0 == 1){
+                TMR1L = 0;
+                TMR1H = 0;
+                TMR1IF = 0;
+                count_time = 0;
+                while(RA0 == 1){
+                    if(TMR1IF){
+                        count_time += 65536;
+                        TMR1IF = 0;
+                    }
+                    if(count_time > 1000000) break;
                 }
-                if(count_time > 1000000) break;
+                if(TMR1IF){
+                    count_time += TMR1 + 65536;
+                }else{
+                    count_time += TMR1;
+                }
+
+                if(count_time > 6000) count_time = 6000;
+                if(count_time < 200) count_time = 0;
+                average[i] = count_time;
+//                send_data[0] = count_time % 0x100;
+//                send_data[1] = count_time / 0x100;
+    //            send_data[2] = count_time / 0x10000;
+    //            send_data[3] = count_time / 0x1000000;
             }
-            if(TMR1IF){
-                count_time += TMR1 + 65536;
-            }else{
-                count_time += TMR1;
-            }
-            
-            if(count_time > 6000) count_time = 6000;
-            if(count_time < 0) count_time = 0;
-            send_data[0] = count_time % 0x100;
-            send_data[1] = count_time / 0x100;
-//            send_data[2] = count_time / 0x10000;
-//            send_data[3] = count_time / 0x1000000;
         }
+        for( i = 0;i < 5;i++){
+            average_ans += average[i];
+        }
+        send_data[0] = average_ans & 0x100;
+        send_data[1] = average_ans / 0x100;
     }
 
     return (0);
