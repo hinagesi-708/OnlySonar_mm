@@ -62,7 +62,7 @@ int main(void) {
                         count_time += 65536;
                         TMR1IF = 0;
                     }
-                    if(count_time > 1000000) break;
+                    if(count_time > 7000) break;
                 }
                 if(TMR1IF){
                     count_time += TMR1 + 65536;
@@ -70,19 +70,16 @@ int main(void) {
                     count_time += TMR1;
                 }
 
-                if(count_time > 6000) count_time = 6000;
-                if(count_time < 200) count_time = 0;
                 average[i] = count_time;
-//                send_data[0] = count_time % 0x100;
-//                send_data[1] = count_time / 0x100;
-    //            send_data[2] = count_time / 0x10000;
-    //            send_data[3] = count_time / 0x1000000;
             }
         }
         for( i = 0;i < 5;i++){
             average_ans += average[i];
         }
         average_ans = average_ans / 5;
+        if(average_ans > 6000)      average_ans = 6000;
+        else if(average_ans < 200)  average_ans = 0;
+        
         send_data[0] = average_ans & 0x100;
         send_data[1] = average_ans / 0x100;
     }
